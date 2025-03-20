@@ -1,7 +1,8 @@
-from sqlalchemy import Column, String, Float, Boolean, ForeignKey, Enum
+from sqlalchemy import Column, String, Float, Boolean, ForeignKey, Enum, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import enum
+import uuid
 
 from app.models.base import BaseModel
 
@@ -27,6 +28,9 @@ class Product(BaseModel):
 
     # Base price is always per purchase unit
     base_price = Column(Float, nullable=False, default=0.0)
+
+    # VAT rate applied to this product (in percentage, e.g., 20.0 for 20%)
+    vat_rate = Column(Numeric(precision=5, scale=2), nullable=False, default=20.0)
 
     # For products that are sold by weight, we store the price per kg
     price_per_kg = Column(Float, nullable=True)

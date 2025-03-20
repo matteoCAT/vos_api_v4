@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from uuid import UUID
+from decimal import Decimal
 from app.models.product import ProductType
 from app.schemas.product_unit import ProductUnit
 from app.schemas.product_format import ProductFormat
@@ -13,6 +14,7 @@ class ProductBase(BaseModel):
     description: Optional[str] = Field(None, description="Product description")
     product_type: ProductType = Field(..., description="Product type (unit, case, weight)")
     base_price: float = Field(..., description="Base price per purchase unit")
+    vat_rate: Decimal = Field(20.0, description="VAT rate in percentage (e.g., 20.0 for 20%)")
     price_per_kg: Optional[float] = Field(None, description="Price per kg for weight-based products")
     is_active: Optional[bool] = Field(True, description="Whether the product is active")
     purchasable: Optional[bool] = Field(True, description="Whether the product can be purchased")
@@ -40,6 +42,7 @@ class ProductCreate(ProductBase):
                 "description": "Natural spring water",
                 "product_type": "unit",
                 "base_price": 10.99,
+                "vat_rate": 20.0,
                 "is_active": True,
                 "purchasable": True,
                 "sellable": True,
@@ -58,6 +61,7 @@ class ProductUpdate(BaseModel):
     description: Optional[str] = None
     product_type: Optional[ProductType] = None
     base_price: Optional[float] = None
+    vat_rate: Optional[Decimal] = None
     price_per_kg: Optional[float] = None
     is_active: Optional[bool] = None
     purchasable: Optional[bool] = None
@@ -73,6 +77,7 @@ class ProductUpdate(BaseModel):
                 "name": "Updated Water",
                 "description": "Premium natural spring water",
                 "base_price": 12.99,
+                "vat_rate": 5.0,
                 "is_active": False
             }
         }

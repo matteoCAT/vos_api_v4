@@ -33,8 +33,7 @@ def init_products(db: Session) -> None:
 
     # Skip if units or formats don't exist
     if not all([kg_unit, g_unit, unit_unit, bottle_unit, case_unit, can_unit, bottle_500ml, can_330ml]):
-        print(
-            "Warning: Some units or formats are missing. Run seed_product_units.py and seed_product_formats.py first.")
+        print("Warning: Some units or formats are missing. Run seed_product_units.py and seed_product_formats.py first.")
         return
 
     # Define sample products
@@ -46,6 +45,7 @@ def init_products(db: Session) -> None:
             "description": "Natural mineral water in 500ml bottles",
             "product_type": ProductType.UNIT,
             "base_price": 12.99,  # Price per case
+            "vat_rate": 20.0,  # Standard VAT rate
             "is_active": True,
             "purchasable": True,
             "sellable": True,
@@ -60,6 +60,7 @@ def init_products(db: Session) -> None:
             "description": "Carbonated soft drink in 330ml cans",
             "product_type": ProductType.UNIT,
             "base_price": 18.50,  # Price per case
+            "vat_rate": 20.0,  # Standard VAT rate
             "is_active": True,
             "purchasable": True,
             "sellable": True,
@@ -76,6 +77,7 @@ def init_products(db: Session) -> None:
             "description": "High-quality sliced ham",
             "product_type": ProductType.WEIGHT,
             "base_price": 8.99,  # Price per kg
+            "vat_rate": 5.0,  # Reduced VAT rate for fresh food
             "price_per_kg": 8.99,
             "is_active": True,
             "purchasable": True,
@@ -91,6 +93,7 @@ def init_products(db: Session) -> None:
             "description": "Premium aged cheese",
             "product_type": ProductType.WEIGHT,
             "base_price": 12.50,  # Price per kg
+            "vat_rate": 5.0,  # Reduced VAT rate for fresh food
             "price_per_kg": 12.50,
             "is_active": True,
             "purchasable": True,
@@ -108,6 +111,7 @@ def init_products(db: Session) -> None:
             "description": "Italian peeled tomatoes",
             "product_type": ProductType.CASE,
             "base_price": 24.00,  # Price per case
+            "vat_rate": 0.0,  # Zero VAT rate for basic food
             "is_active": True,
             "purchasable": True,
             "sellable": True,
