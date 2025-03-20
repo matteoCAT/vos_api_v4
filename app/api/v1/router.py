@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health, auth, users, suppliers
+from app.api.v1.endpoints import health, auth, users, suppliers, product_units, product_formats
 
 api_router = APIRouter()
 
@@ -9,9 +9,5 @@ api_router.include_router(health.router, prefix="/health", tags=["health"])
 api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
-
-
-# Add other routers as you develop them
-# api_router.include_router(products.router, prefix="/products", tags=["products"])
-# api_router.include_router(recipes.router, prefix="/recipes", tags=["recipes"])
-# api_router.include_router(invoices.router, prefix="/invoices", tags=["invoices"])
+api_router.include_router(product_units.router, prefix="/product-units", tags=["product-units"])
+api_router.include_router(product_formats.router, prefix="/product-formats", tags=["product-formats"])
