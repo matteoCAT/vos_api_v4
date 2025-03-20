@@ -8,7 +8,8 @@ from app.api.v1.endpoints import (
     product_units,
     product_formats,
     products,
-    invoices
+    invoices,
+    sites
 )
 
 api_router = APIRouter()
@@ -22,3 +23,5 @@ api_router.include_router(product_units.router, prefix="/product-units", tags=["
 api_router.include_router(product_formats.router, prefix="/product-formats", tags=["product-formats"])
 api_router.include_router(products.router, prefix="/products", tags=["products"])
 api_router.include_router(invoices.router, prefix="/invoices", tags=["invoices"])
+api_router.include_router(sites.router, prefix="/sites", tags=["sites"])
+

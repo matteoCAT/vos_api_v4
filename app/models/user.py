@@ -53,3 +53,5 @@ class User(BaseModel):
     is_active = Column(Boolean, default=True)
     refresh_token = Column(String, nullable=True)  # For storing refresh tokens
     last_login = Column(DateTime, nullable=True)
+
+    managed_sites = relationship("Site", back_populates="manager", foreign_keys="Site.manager_id")
