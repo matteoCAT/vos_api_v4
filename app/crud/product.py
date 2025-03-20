@@ -12,6 +12,30 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
     CRUD operations for Product model
     """
 
+    def get_with_details(self, db: Session, id: Any) -> Optional[Product]:
+        """
+        Get a product by ID with all related entities (units, format) eagerly loaded
+
+        Args:
+            db: Database session
+            id: Product ID
+
+        Returns:
+            Optional[Product]: Product instance with related entities if found, None otherwise
+        """
+        from sqlalchemy.orm import joinedload
+
+        return (
+            db.query(Product)
+            .options(
+                joinedload(Product.purchase_unit),
+                joinedload(Product.sales_unit),
+                joinedload(Product.default_format)
+            )
+            .filter(Product.id == id)
+            .first()
+        )
+
     def get_by_code(self, db: Session, *, code: str) -> Optional[Product]:
         """
         Get a product by code

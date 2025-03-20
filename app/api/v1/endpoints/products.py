@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.models.product import ProductType
-from app.schemas.product import Product as ProductSchema, ProductDetail, ProductCreate, ProductUpdate
+from app.schemas.product import Product as ProductSchema, ProductDetail, ProductCreate, ProductUpdate, ProductResponse
 from app.core.security import get_current_active_user, check_user_permissions
 from app.db.session import get_db
 from app.crud.product import product_crud
@@ -15,7 +15,49 @@ from app.crud.product_format import product_format_crud
 router = APIRouter()
 
 
-@router.get("/", response_model=List[ProductSchema], summary="Get all products")
+def enhance_product_with_unit_info(db: Session, product):
+    """
+    Enhance product object with unit and format name information for UI display
+    """
+    # Create a new dictionary with all product attributes
+    enhanced_product = product.__dict__.copy()
+
+    # Remove SQLAlchemy state attributes
+    if "_sa_instance_state" in enhanced_product:
+        del enhanced_product["_sa_instance_state"]
+
+    # Add unit names and symbols by querying the database
+    purchase_unit = product_unit_crud.get(db, id=product.purchase_unit_id)
+    sales_unit = product_unit_crud.get(db, id=product.sales_unit_id)
+
+    if purchase_unit:
+        enhanced_product["purchase_unit_name"] = purchase_unit.name
+        enhanced_product["purchase_unit_symbol"] = purchase_unit.symbol
+    else:
+        enhanced_product["purchase_unit_name"] = "Unknown"
+        enhanced_product["purchase_unit_symbol"] = "?"
+
+    if sales_unit:
+        enhanced_product["sales_unit_name"] = sales_unit.name
+        enhanced_product["sales_unit_symbol"] = sales_unit.symbol
+    else:
+        enhanced_product["sales_unit_name"] = "Unknown"
+        enhanced_product["sales_unit_symbol"] = "?"
+
+    # Add format name if default_format_id exists
+    if product.default_format_id:
+        default_format = product_format_crud.get(db, id=product.default_format_id)
+        if default_format:
+            enhanced_product["default_format_name"] = default_format.name
+        else:
+            enhanced_product["default_format_name"] = None
+    else:
+        enhanced_product["default_format_name"] = None
+
+    return enhanced_product
+
+
+@router.get("/", response_model=List[ProductResponse], summary="Get all products")
 def get_products(
         db: Session = Depends(get_db),
         skip: int = 0,
@@ -38,18 +80,23 @@ def get_products(
     - **purchasable**: Filter by purchasable status
     - **sellable**: Filter by sellable status
     """
+    # Get products based on filters
     if search:
-        return product_crud.search(db, query=search, skip=skip, limit=limit)
+        products = product_crud.search(db, query=search, skip=skip, limit=limit)
     elif product_type:
-        return product_crud.get_by_type(db, product_type=product_type, skip=skip, limit=limit)
+        products = product_crud.get_by_type(db, product_type=product_type, skip=skip, limit=limit)
     elif active_only:
-        return product_crud.get_active(db, skip=skip, limit=limit)
+        products = product_crud.get_active(db, skip=skip, limit=limit)
     elif purchasable is not None and purchasable:
-        return product_crud.get_purchasable(db, skip=skip, limit=limit)
+        products = product_crud.get_purchasable(db, skip=skip, limit=limit)
     elif sellable is not None and sellable:
-        return product_crud.get_sellable(db, skip=skip, limit=limit)
+        products = product_crud.get_sellable(db, skip=skip, limit=limit)
     else:
-        return product_crud.get_multi(db, skip=skip, limit=limit)
+        products = product_crud.get_multi(db, skip=skip, limit=limit)
+
+    # Enhance each product with unit and format names
+    enhanced_products = [enhance_product_with_unit_info(db, product) for product in products]
+    return enhanced_products
 
 
 @router.post("/", response_model=ProductDetail, summary="Create new product")
@@ -113,7 +160,7 @@ def create_product(
     return product
 
 
-@router.get("/{product_id}", response_model=ProductDetail, summary="Get product by ID")
+@router.get("/{product_id}", response_model=ProductResponse, summary="Get product by ID")
 def get_product(
         *,
         db: Session = Depends(get_db),
@@ -131,10 +178,13 @@ def get_product(
             status_code=404,
             detail="Product not found"
         )
-    return product
+
+    # Enhance product with unit and format names for UI display
+    enhanced_product = enhance_product_with_unit_info(db, product)
+    return enhanced_product
 
 
-@router.put("/{product_id}", response_model=ProductDetail, summary="Update product")
+@router.put("/{product_id}", response_model=ProductResponse, summary="Update product")
 def update_product(
         *,
         db: Session = Depends(get_db),
@@ -202,10 +252,13 @@ def update_product(
 
     # Update product
     product = product_crud.update(db, db_obj=product, obj_in=product_in)
-    return product
+
+    # Enhance product with unit and format names
+    enhanced_product = enhance_product_with_unit_info(db, product)
+    return enhanced_product
 
 
-@router.delete("/{product_id}", response_model=ProductSchema, summary="Delete product")
+@router.delete("/{product_id}", response_model=ProductResponse, summary="Delete product")
 def delete_product(
         *,
         db: Session = Depends(get_db),
@@ -227,11 +280,16 @@ def delete_product(
     # In a more complete implementation, we would check if this product is referenced
     # by any orders, recipes, etc., and prevent deletion if needed
 
-    product = product_crud.remove(db, id=product_id)
-    return product
+    # Save product info before deletion for response
+    enhanced_product = enhance_product_with_unit_info(db, product)
+
+    # Remove the product
+    product_crud.remove(db, id=product_id)
+
+    return enhanced_product
 
 
-@router.get("/by-code/{code}", response_model=ProductDetail, summary="Get product by code")
+@router.get("/by-code/{code}", response_model=ProductResponse, summary="Get product by code")
 def get_product_by_code(
         *,
         db: Session = Depends(get_db),
@@ -249,4 +307,7 @@ def get_product_by_code(
             status_code=404,
             detail="Product not found"
         )
-    return product
+
+    # Enhance product with unit and format names for UI display
+    enhanced_product = enhance_product_with_unit_info(db, product)
+    return enhanced_product

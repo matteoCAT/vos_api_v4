@@ -96,3 +96,24 @@ class ProductDetail(Product):
     purchase_unit: ProductUnit
     sales_unit: ProductUnit
     default_format: Optional[ProductFormat] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ProductResponse(ProductInDBBase):
+    """Schema for Product data returned to client with additional fields for UI display"""
+    # Include original IDs
+    purchase_unit_id: UUID
+    sales_unit_id: UUID
+    default_format_id: Optional[UUID] = None
+
+    # Add string representations for UI display
+    purchase_unit_name: str
+    purchase_unit_symbol: str
+    sales_unit_name: str
+    sales_unit_symbol: str
+    default_format_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
